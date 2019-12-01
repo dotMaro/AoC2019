@@ -1,8 +1,6 @@
 package main
 
 import (
-	"io/ioutil"
-	"math"
 	"strconv"
 	"strings"
 
@@ -10,14 +8,7 @@ import (
 )
 
 func main() {
-	inputFile := utils.OpenFile("day1/input.txt")
-	defer inputFile.Close()
-	inputBytes, err := ioutil.ReadAll(inputFile)
-	if err != nil {
-		panic(err)
-	}
-	input := string(inputBytes)
-
+	input := utils.ReadFile("day1/input.txt")
 	utils.Print("Fuel required (ignoring the fuel's mass): %v", calculateFuelRequired(input, false))
 	utils.Print("Fuel required (considering the fuel's mass): %v", calculateFuelRequired(input, true))
 }
@@ -38,7 +29,7 @@ func fuel(mass int, considerFuelMass bool) int {
 	if mass <= 0 {
 		return 0
 	}
-	fuelReq := int(math.Floor(float64(mass)/3.0)) - 2
+	fuelReq := mass/3 - 2 // int division so it will be floored anyway
 	if considerFuelMass {
 		fuelForFuel := fuel(fuelReq, true)
 		if fuelForFuel > 0 {

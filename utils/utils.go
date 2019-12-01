@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 )
@@ -16,6 +17,17 @@ func OpenFile(name string) *os.File {
 		panic(err)
 	}
 	return file
+}
+
+// ReadFile returns a file's content as a string.
+func ReadFile(name string) string {
+	file := OpenFile(name)
+	defer file.Close()
+	inputBytes, err := ioutil.ReadAll(file)
+	if err != nil {
+		panic(err)
+	}
+	return string(inputBytes)
 }
 
 // Print to console.
