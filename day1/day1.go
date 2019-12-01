@@ -9,11 +9,11 @@ import (
 
 func main() {
 	input := utils.ReadFile("day1/input.txt")
-	utils.Print("Fuel required (ignoring the fuel's mass): %v", calculateFuelRequired(input, false))
-	utils.Print("Fuel required (considering the fuel's mass): %v", calculateFuelRequired(input, true))
+	utils.Print("Fuel required (ignoring the fuel's mass): %s", calculateFuelForModules(input, false))
+	utils.Print("Fuel required (considering the fuel's mass): %s", calculateFuelForModules(input, true))
 }
 
-func calculateFuelRequired(input string, considerFuelMass bool) int {
+func calculateFuelForModules(input string, considerFuelMass bool) int {
 	var fuelRequired int
 	for _, massString := range strings.Split(input, "\n") {
 		mass, err := strconv.Atoi(massString)
