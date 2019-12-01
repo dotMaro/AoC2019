@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 )
 
-// ReadFile wraps os.Open.
+// OpenFile wraps os.Open.
 // Panics on error.
-func ReadFile(name string) *os.File {
+func OpenFile(name string) *os.File {
 	pwd, _ := os.Getwd()
 	path := filepath.Join(pwd, name)
 	file, err := os.Open(path)
