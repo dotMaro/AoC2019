@@ -9,8 +9,8 @@ import (
 
 func main() {
 	input := utils.ReadFile("day1/input.txt")
-	utils.Print("Fuel required (ignoring the fuel's mass): %s", calculateFuelForModules(input, false))
-	utils.Print("Fuel required (considering the fuel's mass): %s", calculateFuelForModules(input, true))
+	utils.Print("Fuel required (ignoring the fuel's mass): %d", calculateFuelForModules(input, false))
+	utils.Print("Fuel required (considering the fuel's mass): %d", calculateFuelForModules(input, true))
 }
 
 func calculateFuelForModules(input string, considerFuelMass bool) int {
