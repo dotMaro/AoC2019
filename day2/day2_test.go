@@ -19,7 +19,6 @@ func TestProgram(t *testing.T) {
 	for _, c := range testCases {
 		t.Logf("Input %v", c.input)
 		p := newProgram(c.input)
-		// t.Log(p.data)
 		p.run()
 		if !reflect.DeepEqual(p.memory, c.exp) {
 			t.Errorf("Should have data\n%v, not\n%v on input %v", c.exp, p.memory, c.input)
