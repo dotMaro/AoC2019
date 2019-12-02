@@ -44,12 +44,16 @@ func TestResetProgram(t *testing.T) {
 }
 
 func TestProgramSetInputs(t *testing.T) {
+	const (
+		noun = 3
+		verb = 5
+	)
 	p := newProgram("1,0,0,0,99")
-	p.setInputs(3, 5)
-	if p.memory[1] != 3 {
-		t.Errorf("Should set noun to %d, but was %d", 3, p.memory[1])
+	p.setInputs(noun, verb)
+	if p.memory[1] != noun {
+		t.Errorf("Should set noun to %d, but was %d", noun, p.memory[1])
 	}
-	if p.memory[2] != 5 {
-		t.Errorf("Should set verb to %d, but was %d", 3, p.memory[2])
+	if p.memory[2] != verb {
+		t.Errorf("Should set verb to %d, but was %d", verb, p.memory[2])
 	}
 }
