@@ -14,8 +14,8 @@ func main() {
 	program := newProgram(input)
 	// "before running the program, replace position 1 with the value 12 and replace position 2 with the value 2"
 	program.setInputs(12, 2)
-	program.run()
-	utils.Print("Step 1 (input 12 and 2): %v", program.memory[0])
+	output := program.run()
+	utils.Print("Step 1 (input 12 and 2): %v", output)
 	program.reset()
 
 	noun, verb := program.findInputForOutput(desiredOutput)
@@ -48,12 +48,13 @@ func newProgram(input string) program {
 // findInputForOutput will try to find the input noun and verb
 // to get the desired output in the interval 0-99.
 // If none is found then both values will be returned as -1.
-func (p *program) findInputForOutput(output int) (noun, verb int) {
+func (p *program) findInputForOutput(desiredOutput int) (noun, verb int) {
 	for noun = 0; noun <= 99; noun++ {
 		for verb = 0; verb <= 99; verb++ {
 			p.setInputs(noun, verb)
-			p.run()
-			if p.memory[0] == output {
+			output := p.run()
+			if output == desiredOutput {
+				p.reset()
 				return noun, verb
 			}
 			p.reset()
@@ -72,11 +73,13 @@ func (p *program) reset() {
 	copy(p.memory, p.initial)
 }
 
-func (p *program) run() {
+// run program and return output.
+func (p *program) run() int {
 	p.stop = false
 	for !p.stop {
 		p.step()
 	}
+	return p.memory[0]
 }
 
 func (p *program) step() {

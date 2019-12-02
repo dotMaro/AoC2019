@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestProgram(t *testing.T) {
+func TestRunProgram(t *testing.T) {
 	testCases := []struct {
 		input string
 		exp   []int
@@ -19,9 +19,12 @@ func TestProgram(t *testing.T) {
 	for _, c := range testCases {
 		t.Logf("Input %v", c.input)
 		p := newProgram(c.input)
-		p.run()
+		output := p.run()
 		if !reflect.DeepEqual(p.memory, c.exp) {
 			t.Errorf("Should have data\n%v, not\n%v on input %v", c.exp, p.memory, c.input)
+		}
+		if output != c.exp[0] {
+			t.Errorf("Should return output %d, but returned %d", c.exp[0], output)
 		}
 	}
 }
