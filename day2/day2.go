@@ -25,9 +25,9 @@ func main() {
 
 type program struct {
 	memory  []int
-	initial []int
-	pc      int
-	stop    bool
+	initial []int // what memory resets to when calling reset()
+	pc      int   // program counter
+	stop    bool  // running state
 }
 
 func newProgram(input string) program {
