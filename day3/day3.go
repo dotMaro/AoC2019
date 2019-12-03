@@ -101,7 +101,7 @@ func (w *wire) interceptPoints(o wire) []point {
 				from: o.points[u-1],
 				to:   o.points[u],
 			}
-			intercept := v1.collidesWith(v2)
+			intercept := v1.intercepts(v2)
 			if intercept.x != 0 && intercept.y != 0 {
 				// Calculate total wire length (both wires combined)
 				intercept.wireLen = v1.from.wireLen + intercept.distanceToPoint(v1.from) +
@@ -156,7 +156,7 @@ func abs(i int) int {
 	return i
 }
 
-// segment represents a wire segment (which is always straight)
+// segment represents a wire segment (which is always straight).
 // It is a closed line segment between two points.
 type segment struct {
 	from, to point
@@ -171,14 +171,26 @@ func (v segment) unchangingAxis() (val int, xAxis bool) {
 	return v.from.y, false
 }
 
-// collidesWith returns where the vector collides with vector o.
-// If there is no collision 0,0 will be returned. wirelen is not provided.
-func (v segment) collidesWith(o segment) point {
+// intercepts returns where the segment intercepts segment o.
+// If there is no interception then (0, 0) will be returned. wirelen is not provided.
+func (v segment) intercepts(o segment) point {
+	// With the assumption that no interceptions occur when segments are
+	// parallel, and that segments always move either horizontally or
+	// vertically (not both), we can pretty easily check for interceptions.
+	//
+	// First find the values where interception could occur, and what axis for
+	// both segments are changing. I.e. if the segments are horizontal
+	// or vertical.
 	a, axAxis := v.unchangingAxis()
 	b, bxAxis := o.unchangingAxis()
+	if axAxis == bxAxis {
+		// We're assuming that they can't overlap
+		// when they are parallel
+		return point{}
+	}
 
-	// Check the same axis on the other vector
-	// for both unchanging values.
+	// Check if the first value (x or y) is on the interval of the
+	// same axis of the other segment. Do this for the other value (axis) too.
 	var aCanCollide bool
 	if axAxis {
 		aCanCollide = inRange(a, o.from.x, o.to.x)
@@ -192,7 +204,9 @@ func (v segment) collidesWith(o segment) point {
 		bCanCollide = inRange(b, v.from.y, v.to.y)
 	}
 
+	// If both axes are in range then they collide
 	if aCanCollide && bCanCollide {
+		// Check if a is an x- or y-value
 		if axAxis {
 			return point{x: a, y: b}
 		}
