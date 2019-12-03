@@ -8,12 +8,6 @@ import (
 	"github.com/dotMaro/AoC2019/utils"
 )
 
-/*
-	There are a lot of improvements that can be made here, but I feel
-	I've spent enough time on this day's tasks so I'm just going to leave it
-	as it is. At least it works!
-*/
-
 func main() {
 	input := utils.ReadFile("day3/input.txt")
 	wireInput := strings.Split(input, "\n")
@@ -24,7 +18,7 @@ func main() {
 		closestInterceptWireLen  int
 	)
 	for _, p := range w1.interceptPoints(w2) {
-		dist := p.distance()
+		dist := p.distanceToOrigin()
 		if closestInterceptDistance == 0 || dist < closestInterceptDistance {
 			closestInterceptDistance = dist
 		}
@@ -32,8 +26,8 @@ func main() {
 			closestInterceptWireLen = p.wireLen
 		}
 	}
-	utils.Print("Part 1: Closest intercept's distance is %d", closestInterceptDistance)
-	utils.Print("Part 2: Closest intercept's wire length is %d", closestInterceptWireLen)
+	utils.Print("Part 1: Closest intercept point's Manhattan distance is %d", closestInterceptDistance)
+	utils.Print("Part 2: Closest intercept point's wire length is %d", closestInterceptWireLen)
 }
 
 type direction int
@@ -45,6 +39,8 @@ const (
 	right
 )
 
+// getDirection from byte.
+// Panics on unknown direction.
 func getDirection(d byte) direction {
 	switch d {
 	case 'R':
@@ -61,6 +57,8 @@ func getDirection(d byte) direction {
 }
 
 type wire struct {
+	// The points where the wire turns,
+	// and where its segments split.
 	points []point
 }
 
@@ -75,46 +73,37 @@ func newWire(input string) wire {
 		if err != nil {
 			panic(err)
 		}
-		wire.addTraversal(direction, distance)
+		wire.addSegment(direction, distance)
 	}
 	return wire
 }
 
-func (w *wire) addTraversal(dir direction, dist int) {
-	var lastPoint, newPoint point
+// addSegment to the wire.
+func (w *wire) addSegment(dir direction, dist int) {
+	var lastPoint point
 	if len(w.points) != 0 {
 		lastPoint = w.points[len(w.points)-1]
 	}
-
-	switch dir {
-	case up:
-		newPoint = point{x: lastPoint.x, y: lastPoint.y + dist}
-	case down:
-		newPoint = point{x: lastPoint.x, y: lastPoint.y - dist}
-	case right:
-		newPoint = point{x: lastPoint.x + dist, y: lastPoint.y}
-	case left:
-		newPoint = point{x: lastPoint.x - dist, y: lastPoint.y}
-	}
-	newPoint.wireLen = lastPoint.wireLen + dist
-
-	w.points = append(w.points, newPoint)
+	w.points = append(w.points, lastPoint.move(dir, dist))
 }
 
+// interceptPoints returns every point where the wire collides with wire o.
+// The points' wireLen is the total wire length to get to that point (both wire combined).
 func (w *wire) interceptPoints(o wire) []point {
 	var interceptPoints []point
 	for i := 1; i < len(w.points); i++ {
-		v1 := vector{
+		v1 := segment{
 			from: w.points[i-1],
 			to:   w.points[i],
 		}
 		for u := 1; u < len(o.points); u++ {
-			v2 := vector{
+			v2 := segment{
 				from: o.points[u-1],
 				to:   o.points[u],
 			}
 			intercept := v1.collidesWith(v2)
 			if intercept.x != 0 && intercept.y != 0 {
+				// Calculate total wire length (both wires combined)
 				intercept.wireLen = v1.from.wireLen + intercept.distanceToPoint(v1.from) +
 					v2.from.wireLen + intercept.distanceToPoint(v2.from)
 				interceptPoints = append(interceptPoints, intercept)
@@ -124,19 +113,42 @@ func (w *wire) interceptPoints(o wire) []point {
 	return interceptPoints
 }
 
+// point represents an edge of a wire segment.
+// It can also be viewed as a corner of the wire.
 type point struct {
-	x, y    int
-	wireLen int
+	x, y    int // coordinates
+	wireLen int // wire length
 }
 
-func (p point) distance() int {
+// move returns a new point that has the same properties as
+// the point, but has moved a certain distance dist in direction dir.
+func (p point) move(dir direction, dist int) point {
+	var movedPoint point
+	switch dir {
+	case up:
+		movedPoint = point{x: p.x, y: p.y + dist}
+	case down:
+		movedPoint = point{x: p.x, y: p.y - dist}
+	case right:
+		movedPoint = point{x: p.x + dist, y: p.y}
+	case left:
+		movedPoint = point{x: p.x - dist, y: p.y}
+	}
+	movedPoint.wireLen = p.wireLen + dist
+	return movedPoint
+}
+
+// distanceToOrigin returns the Manhattan distance to origin (0, 0).
+func (p point) distanceToOrigin() int {
 	return p.distanceToPoint(point{x: 0, y: 0})
 }
 
+// distanceToPoint returns the Manhattan distance to point o.
 func (p point) distanceToPoint(o point) int {
 	return abs(abs(p.x)-abs(o.x)) + abs(abs(p.y)-abs(o.y))
 }
 
+// abs returns the absolute value of i.
 func abs(i int) int {
 	if i < 0 {
 		return -i
@@ -144,51 +156,40 @@ func abs(i int) int {
 	return i
 }
 
-type vector struct {
+// segment represents a wire segment (which is always straight)
+// It is a closed line segment between two points.
+type segment struct {
 	from, to point
 }
 
-func (v vector) unchangingAxis() (val int, xAxis bool) {
+// unchangingAxis returns what axis and the value of that axis.
+// It assumes that exactly one axis is changing.
+func (v segment) unchangingAxis() (val int, xAxis bool) {
 	if v.from.x == v.to.x {
 		return v.from.x, true
 	}
-	// assuming y is unchanging
 	return v.from.y, false
 }
 
 // collidesWith returns where the vector collides with vector o.
 // If there is no collision 0,0 will be returned. wirelen is not provided.
-func (v vector) collidesWith(o vector) point {
-	/*
-		a = Find unchanging value in v1
-		b = Find unchanging value in v2
-
-		is a within v2's values in same axis (x or y)?
-		is b within v1's values in same axis (x or y)?
-
-		if both yes:
-			intersect at (a, b)
-	*/
+func (v segment) collidesWith(o segment) point {
 	a, axAxis := v.unchangingAxis()
 	b, bxAxis := o.unchangingAxis()
-	// axAxis should never be equal to bxAxis
 
+	// Check the same axis on the other vector
+	// for both unchanging values.
 	var aCanCollide bool
 	if axAxis {
-		aCanCollide = a >= o.from.x && a <= o.to.x ||
-			a <= o.from.x && a >= o.to.x
+		aCanCollide = inRange(a, o.from.x, o.to.x)
 	} else {
-		aCanCollide = a >= o.from.y && a <= o.to.y ||
-			a <= o.from.y && a >= o.to.y
+		aCanCollide = inRange(a, o.from.y, o.to.y)
 	}
-
 	var bCanCollide bool
 	if bxAxis {
-		bCanCollide = b >= v.from.x && b <= v.to.x ||
-			b <= v.from.x && b >= v.to.x
+		bCanCollide = inRange(b, v.from.x, v.to.x)
 	} else {
-		bCanCollide = b >= v.from.y && b <= v.to.y ||
-			b <= v.from.y && b >= v.to.y
+		bCanCollide = inRange(b, v.from.y, v.to.y)
 	}
 
 	if aCanCollide && bCanCollide {
@@ -198,4 +199,10 @@ func (v vector) collidesWith(o vector) point {
 		return point{x: b, y: a}
 	}
 	return point{x: 0, y: 0}
+}
+
+// inRange returns whether true if a >= val <= b
+// or b >= val <= a.
+func inRange(val, a, b int) bool {
+	return val >= a && val <= b || val >= b && val <= a
 }
