@@ -17,7 +17,6 @@ const (
 func main() {
 	input := utils.ReadFile("day5/input.txt")
 	program := newProgram(input, 2)
-	// program.setInputs(12, 2)
 	output := program.run()
 	utils.Print("Step 1: %v", output)
 	program.reset()
