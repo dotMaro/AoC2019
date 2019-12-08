@@ -225,10 +225,10 @@ func (p *program) step() {
 
 type operand struct {
 	paramCount int
-	opFunc     operandFund
+	opFunc     operandFunc
 }
 
-type operandFund func(s executor, params []int) (pcInc int)
+type operandFunc func(s executor, params []int) (pcInc int)
 
 func add(e executor, params []int) (pcInc int) {
 	if !e.store(3, params[0]+params[1]) {
