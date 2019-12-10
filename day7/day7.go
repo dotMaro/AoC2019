@@ -279,7 +279,7 @@ func lessThan(e executor, params []int) (pcInc int) {
 	if params[0] < params[1] {
 		value = 1
 	}
-	e.store(params[2], value)
+	e.store(2, value)
 	return 4
 }
 
@@ -288,7 +288,7 @@ func equals(e executor, params []int) (pcInc int) {
 	if params[0] == params[1] {
 		value = 1
 	}
-	e.store(params[2], value)
+	e.store(2, value)
 	return 4
 }
 
